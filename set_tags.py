@@ -17,8 +17,11 @@ def has_tags(mp3):
 
     return mp3.tag.title is not None
 
+        
+
 
 def set_mp3_tags(mp3, set_track_num, tags):   
+
 
     if mp3.tag.title is None:
         mp3.tag.title = tags.get("title") 
@@ -36,6 +39,27 @@ def set_mp3_tags(mp3, set_track_num, tags):
         mp3.tag.track_num = tags.get('track_num')
 
     mp3.tag.save()
+
+
+def manual_tag_verification(mp3, tags):
+    # return True means skip the file. False means don't skip the file
+    # getting verification
+    print(f"The tags found for {mp3} were")
+    pprint(tags)
+    response = input("Are these correct (y/n): ")
+
+    # if not y, we need more inputs from the user
+    if response != 'y':
+        # do we want to input or skip this file?
+        response = input(f"Update Tags 'u' \nContinue to next file 'Enter'\n?")
+        # if we just want to skip the file
+        if response != 'u':
+            print(f"skipping file {mp3}")
+            return True
+
+        manual_set_new_tag(tags)
+    
+    return False
 
 def manual_set_new_tag(tags):
 
@@ -69,7 +93,6 @@ def get_audio_tags(mp3):
         tags["album"] = metadata[0]['text']
         tags["albumadamid"] = track.get("albumadamid")
         # tags["album_cover_url"] = track.get('share', {}).get('image') #we're gonna save this to album_artist
-  
 
     return tags
 
@@ -86,37 +109,22 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--filename")
     args = parser.parse_args()
 
-
     if args.all_files_in_directory:
         # get all mp3 objects
         mp3s = get_mp3s(args.directory)
-        # filter out mp3s that already have tags, unless we want to overwrite them
-        mp3s = [mp3 for mp3 in mp3s if not has_tags(mp3)] if not args.overwrite_tags else mp3s
+    else: 
+        mp3s = [eyed3.load(args.directory + args.filename)]
+
+    
+    # filter out mp3s that already have tags, unless we want to overwrite them
+    mp3s = [mp3 for mp3 in mp3s if not has_tags(mp3)] if not args.overwrite_tags else mp3s
         
-        for mp3 in mp3s:
-            # print(help(mp3))
-            # crash
-            print(f"Grabbing tags for {mp3}")
+    for i, mp3 in enumerate(mp3s):
+        print(f"File {i} of {len(mp3s)}")
+        print(f"Grabbing tags for {mp3}")
 
-            tags = get_audio_tags(mp3)
-            
-            print(f"The tags found for {mp3} were \n title: {tags.get('title')} \n artist: {tags.get('artist')} \n album: {tags.get('album')}")
-            response = input("Are these correct (y/n): ")
-            if response != 'y':
-              response = input(f"Update Tags 'u' \nContinue to next file 'Enter'\n?")
-              if response == 'u':
-                manual_set_new_tag(tags)
-              else:
-                print(f"skipping file {mp3}")
-                continue
-
-            set_mp3_tags(mp3, False, tags)
-
-    else:
-        mp3 = eyed3.load(args.directory + args.filename)
         tags = get_audio_tags(mp3)
-        
-        set_mp3_tags(mp3, False, tags
-          )
-
-        
+        skip_file = manual_tag_verification(mp3, tags)
+        if skip_file:
+            continue
+        set_mp3_tags(mp3, False, tags)        
