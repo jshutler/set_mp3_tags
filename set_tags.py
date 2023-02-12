@@ -106,7 +106,9 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--directory", default='/home/jack/Music/jack/mp3s/')
     parser.add_argument("-a", "--all_files_in_directory", action="store_true", default=True)
     parser.add_argument("-o", "--overwrite_tags", action="store_true", default=False)
+    parser.add_argument("-s", "--skip_manual_verification", action="store_true", default=False)
     parser.add_argument("-f", "--filename")
+
     args = parser.parse_args()
 
     if args.all_files_in_directory:
@@ -124,7 +126,10 @@ if __name__ == '__main__':
         print(f"Grabbing tags for {mp3}")
 
         tags = get_audio_tags(mp3)
-        skip_file = manual_tag_verification(mp3, tags)
-        if skip_file:
-            continue
-        set_mp3_tags(mp3, False, tags)        
+
+        # if you just wanna trust shazam to get it right
+        if not args.skip_manual_verification:
+            skip_file = manual_tag_verification(mp3, tags)
+            if skip_file:
+                continue
+        set_mp3_tags(mp3, False, tags)
