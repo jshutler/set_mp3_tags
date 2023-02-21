@@ -3,6 +3,7 @@ from os import listdir
 from ShazamAPI import Shazam
 import argparse
 from pprint import pprint
+from gui import Form
 
 def get_mp3s(directory):
     files = listdir(directory)
@@ -75,16 +76,20 @@ def manual_set_new_tag(tags):
         if exit == 'y':
             return
 
-def get_audio_tags(mp3):
+def query_shazam(recognize_generator):
+    return next(recognize_generator) # current offset & shazam response to recognize requests
+
+def setup_mp3_for_Shazam(mp3):
     mp3_file_content_to_recognize = open(mp3.path, 'rb').read()
     shazam = Shazam(mp3_file_content_to_recognize)
     recognize_generator = shazam.recognizeSong()
+    return recognize_generator
 
-    mp3_recognizer = next(recognize_generator) # current offset & shazam response to recognize requests
-
+def get_audio_tags_from_json(mp3_json):
+    
     tags = {}
 
-    track = mp3_recognizer[1].get('track', {})
+    track = mp3_json[1].get('track', {})
     tags["title"] = track.get('title')
     tags["artist"] = track.get('subtitle')
     metadata = track.get("sections", [{}])[0].get('metadata')
@@ -103,7 +108,7 @@ if __name__ == '__main__':
                     prog = 'Set MP3 Tags',
                     description = 'Takes an MP3. Querries ShazamAPI to get the tags, and sets the tags')
 
-    parser.add_argument("-d", "--directory", default='/home/jack/Music/jack/mp3s/')
+    parser.add_argument("-d", "--directory", default='/home/jack/Music/mp3s/')
     parser.add_argument("-a", "--all_files_in_directory", action="store_true", default=True)
     parser.add_argument("-o", "--overwrite_tags", action="store_true", default=False)
     parser.add_argument("-s", "--skip_manual_verification", action="store_true", default=False)
@@ -124,8 +129,10 @@ if __name__ == '__main__':
     for i, mp3 in enumerate(mp3s):
         print(f"File {i} of {len(mp3s)}")
         print(f"Grabbing tags for {mp3}")
-
-        tags = get_audio_tags(mp3)
+        
+        recognize_generator = setup_mp3_for_Shazam(mp3)
+        mp3_json = query_shazam(recognize_generator) # current offset & shazam response to recognize requests
+        tags = get_audio_tags_from_json(mp3_json)
 
         # if you just wanna trust shazam to get it right
         if not args.skip_manual_verification:
