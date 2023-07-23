@@ -25,7 +25,6 @@ class Form(QDialog):
         self.file_index = 1
         self.mp3 = mp3s.pop()
         self.tags, self.recognize_generator = self.get_mp3_data(self.mp3)
-        
         # parameters to add audio playback
         self.audio_playing = False
         self.audio = AudioSegment.from_mp3(self.mp3.path)
@@ -109,7 +108,6 @@ class Form(QDialog):
     def print_widgets(self):
         for key, value in self.tags.items():
             print(value.text())
-        # print("foo")
 
     def get_next_mp3(self):
         if self.num_mp3s == self.file_index:
@@ -150,7 +148,6 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-
     if args.all_files_in_directory:
         # get all mp3 objects
         mp3s = get_mp3s(args.directory)
@@ -159,28 +156,13 @@ if __name__ == '__main__':
 
     # filter out mp3s that already have tags, unless we want to overwrite them
     mp3s = [mp3 for mp3 in mp3s if not has_tags(mp3)] if not args.overwrite_tags else mp3s
-    
     app = QApplication(sys.argv)
+
     # Create and show the form
     form = Form(mp3s)
     form.show()
     # # filter out mp3s that already have tags, unless we want to overwrite them
-    # mp3s = [mp3 for mp3 in mp3s if not has_tags(mp3)] if not args.overwrite_tags else mp3s
-        
-    # for i, mp3 in enumerate(mp3s):
-    #     print(f"File {i} of {len(mp3s)}")
-    #     print(f"Grabbing tags for {mp3}")
-        
-    #     recognize_generator = setup_mp3_for_Shazam(mp3)
-    #     mp3_json = query_shazam(recognize_generator) # current offset & shazam response to recognize requests
-    #     tags = get_audio_tags_from_json(mp3_json)
 
-    #     # if you just wanna trust shazam to get it right
-    #     if not args.skip_manual_verification:
-    #         skip_file = manual_tag_verification(mp3, tags)
-    #         if skip_file:
-    #             continue
-    #     set_mp3_tags(mp3, False, tags)
 
     # # Run the main Qt loop
     sys.exit(app.exec())

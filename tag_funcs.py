@@ -4,6 +4,8 @@ from ShazamAPI import Shazam
 import argparse
 from pprint import pprint
 from gui import Form
+from eyed3.id3.frames import ImageFrame
+
 
 def get_mp3s(directory):
     files = listdir(directory)
@@ -23,7 +25,7 @@ def has_tags(mp3):
 
 def set_mp3_tags(mp3, set_track_num, tags):   
 
-
+    print(mp3.tag.images)
     if mp3.tag.title is None:
         mp3.tag.title = tags.get("title") 
 
@@ -36,8 +38,13 @@ def set_mp3_tags(mp3, set_track_num, tags):
     if mp3.tag.cd_id is None:
         mp3.tag.album_artist = str(tags.get('albumadamid'))
 
+    if mp3.tag.images is None:
+        mp3.tag.images.set(ImageFrame.FRONT_COVER, open(tags['background'],'rb').read(), 'image/jpeg')
+
+    
     if set_track_num and mp3.tag.track_num is None:
         mp3.tag.track_num = tags.get('track_num')
+
 
     mp3.tag.save()
 
@@ -77,7 +84,9 @@ def manual_set_new_tag(tags):
             return
 
 def query_shazam(recognize_generator):
-    return next(recognize_generator) # current offset & shazam response to recognize requests
+    mp3_json = next(recognize_generator) # current offset & shazam response to recognize requests
+    print(mp3_json)
+    return mp3_json
 
 def setup_mp3_for_Shazam(mp3):
     mp3_file_content_to_recognize = open(mp3.path, 'rb').read()
@@ -92,6 +101,13 @@ def get_audio_tags_from_json(mp3_json):
     track = mp3_json[1].get('track', {})
     tags["title"] = track.get('title')
     tags["artist"] = track.get('subtitle')
+
+    images = track.get('images', {})
+
+    if tags:
+        tags['background'] = images.get('background', '')
+
+
     metadata = track.get("sections", [{}])[0].get('metadata')
 
     if metadata:
