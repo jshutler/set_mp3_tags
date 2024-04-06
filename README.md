@@ -17,4 +17,4 @@ How the flags work:
 --skip_manual_verification Flag whether you want to perform manual verification on the tags that shazam finds.
 
 Example Command
-`python3 set_tags.py --directory <path_to_directory> -a`
+`python3 gui.py --directory <path_to_directory> -a`
